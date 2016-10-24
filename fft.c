@@ -65,6 +65,7 @@
  \image html CFFTQ15.gif "Input and Output Formats for Q15 CFFT"
  \image html CIFFTQ15.gif "Input and Output Formats for Q15 CIFFT"
  */
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,7 @@ inline void stage1(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t tw
 inline void stage2(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) __attribute__((always_inline, unused));
 
 inline void stage3(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) __attribute__((always_inline, unused));
+
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -169,8 +171,7 @@ void arm_cfft_radix4_q15_stage3(const arm_cfft_radix4_instance_q15 * S, q15_t * 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
-void arm_radix4_butterfly_q15_all(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) {
-#ifndef ARM_MATH_CM0
+void arm_radix4_butterfly_q15_all_stages(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) {
     /* Run the below code for Cortex-M4 and Cortex-M3   */
     /* Total process is divided into three stages       */
     /*****************************************************************************************/
@@ -197,9 +198,6 @@ void arm_radix4_butterfly_q15_all(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef
     /* output is in 9.7(q7) format for the 256 point   */
     /* output is in 7.9(q9) format for the 64 point    */
     /* output is in 5.11(q11) format for the 16 point  */
-#else
-    
-#endif /* #ifndef ARM_MATH_CM0 */
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,12 +205,11 @@ void arm_radix4_butterfly_q15_all(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef
 /////////////////////////////////////////////////////////////////////////////////////////////
 inline void stage1(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) {
     /*  start of first stage process */
-    
+#ifndef ARM_MATH_CM0
     /*  Initializations for the first stage */
     q31_t R, S, T, U;
     q31_t C1, C2, C3, out1, out2;
     q15_t in;
-    
     uint32_t i3, i2, i1, i0, ic, n2, n1, j;
     
     n2 = fftLen;
@@ -388,13 +385,16 @@ inline void stage1(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t tw
         i0 = i0 + 1u;
         
     } while (--j);
+#else
+    
+#endif /* #ifndef ARM_MATH_CM0 */
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 inline void stage2(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) {
-
+#ifndef ARM_MATH_CM0
     /*  Initializations for the middle stage */
     q31_t R, S, T, U;
     q31_t C1, C2, C3, out1, out2;
@@ -561,19 +561,21 @@ inline void stage2(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t tw
         /*  Twiddle coefficients index modifier */
         twidCoefModifier <<= 2u;
     }
+#else
+    
+#endif /* #ifndef ARM_MATH_CM0 */
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 inline void stage3(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t twidCoefModifier) {
     /* start of last stage process */
-    
+#ifndef ARM_MATH_CM0
     /*  Initializations for the last stage */
     q31_t R, S, T, U;
     q31_t C1, C2, C3, out1, out2;
     q15_t *ptr1;
     q31_t xaya, xbyb, xcyc, xdyd;
-    
     uint32_t j;
     
     j = fftLen >> 2;
@@ -648,4 +650,7 @@ inline void stage3(q15_t * pSrc16, uint32_t fftLen, q15_t * pCoef16, uint32_t tw
 #endif /*      #ifndef ARM_MATH_BIG_ENDIAN     */
         
     } while (--j);
+#else
+    
+#endif /* #ifndef ARM_MATH_CM0 */
 }
