@@ -103,7 +103,6 @@ void AudioAnalyzeFFT1024_Fast::update(void)
             break;
         case 7:
             blocklist[7] = block;
-            
             // stage 3 of the fft algorithm
             arm_cfft_radix4_q15_stage3(&fft_inst, buf);
             
@@ -124,9 +123,11 @@ void AudioAnalyzeFFT1024_Fast::update(void)
             copy_to_fft_buffer(buf+0x500, blocklist[5]->data);
             copy_to_fft_buffer(buf+0x600, blocklist[6]->data);
             copy_to_fft_buffer(buf+0x700, blocklist[7]->data);
+            
             if (window) apply_window_to_fft_buffer(buf, window);
             
-            outputflag = true;
+            if (!firstrun) outputflag = true;
+            firstrun = false;
             release(blocklist[0]);
             release(blocklist[1]);
             release(blocklist[2]);

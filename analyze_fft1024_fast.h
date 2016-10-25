@@ -46,11 +46,16 @@ extern "C" {
     extern const int16_t AudioWindowTukey1024[];
 }
 
+// pull in the three stages of the fft algorithm.
+extern "C" {
+    arm_status arm_cfft_radix4_init_fast_q15(arm_cfft_radix4_instance_q15 * S, uint16_t fftLen, uint8_t ifftFlag, uint8_t bitReverseFlag);
+}
+
 class AudioAnalyzeFFT1024_Fast : public AudioStream
 {
 public:
     AudioAnalyzeFFT1024_Fast() : AudioStream(1, inputQueueArray),
-    window(AudioWindowHanning1024), state(0), outputflag(false) {
+    window(AudioWindowHanning1024), state(0), outputflag(false), firstrun(true) {
         arm_cfft_radix4_init_q15(&fft_inst, 1024, 0, 1);
     }
     bool available() {
@@ -92,7 +97,7 @@ private:
     audio_block_t *blocklist[8];
     int16_t buffer[2048] __attribute__ ((aligned (4)));
     uint8_t state;
-    volatile bool outputflag;
+    volatile bool outputflag, firstrun;
     audio_block_t *inputQueueArray[1];
     arm_cfft_radix4_instance_q15 fft_inst;
 };
