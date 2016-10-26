@@ -87,32 +87,29 @@ void AudioAnalyzeFFT1024_Fast::update(void)
             break;
         case 4:
             blocklist[4] = block;
+            // stage 2 of the fft algorithm
+            arm_cfft_radix4_q15_stage2(&fft_inst, buf);
             state = 5;
             break;
         case 5:
             blocklist[5] = block;
-            // stage 1 of the fft algorithm
-            arm_cfft_radix4_q15_stage1(&fft_inst, buf);
-            state = 6;
-            break;
-        case 6:
-            blocklist[6] = block;
-            // stage 2 of the fft algorithm
-            arm_cfft_radix4_q15_stage2(&fft_inst, buf);
-            state = 7;
-            break;
-        case 7:
-            blocklist[7] = block;
             // stage 3 of the fft algorithm
             arm_cfft_radix4_q15_stage3(&fft_inst, buf);
-            
             // TODO: support averaging multiple copies
             for (int i=0; i < 512; i++) {
                 uint32_t tmp = *((uint32_t *)buf + i); // real & imag
                 uint32_t magsq = multiply_16tx16t_add_16bx16b(tmp, tmp);
                 output[i] = sqrt_uint32_approx(magsq);
             }
-            
+            outputflag = true;
+            state = 6;
+            break;
+        case 6:
+            blocklist[6] = block;
+            state = 7;
+            break;
+        case 7:
+            blocklist[7] = block;
             // TODO: perhaps distribute the work over multiple update() ??
             //       github pull requsts welcome......
             copy_to_fft_buffer(buf+0x000, blocklist[0]->data);
@@ -123,11 +120,9 @@ void AudioAnalyzeFFT1024_Fast::update(void)
             copy_to_fft_buffer(buf+0x500, blocklist[5]->data);
             copy_to_fft_buffer(buf+0x600, blocklist[6]->data);
             copy_to_fft_buffer(buf+0x700, blocklist[7]->data);
-            
             if (window) apply_window_to_fft_buffer(buf, window);
-            
-            if (!firstrun) outputflag = true;
-            firstrun = false;
+            // stage 1 of the fft algorithm
+            arm_cfft_radix4_q15_stage1(&fft_inst, buf);
             release(blocklist[0]);
             release(blocklist[1]);
             release(blocklist[2]);
